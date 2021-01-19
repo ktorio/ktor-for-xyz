@@ -4,6 +4,9 @@
 # Log file
 *.log
 
+# macOS
+.DS_Store
+
 # BlueJ files
 *.ctxt
 
@@ -21,3 +24,42 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+build
+.gradle
+.gradletasknamecache
+.idea/*
+!.idea/runConfigurations
+!.idea/runConfigurations/*
+!.idea/vcs.xml
+!.idea/dictionaries
+!.idea/dictionaries/*
+!.idea/copyright
+!.idea/copyright/*
+!.idea/codeStyles
+!.idea/codeStyles/*
+!.idea/icon.png
+out
+*.iml
+.vscode
+
+*.versionsBackup
+*.releaseBackup
+release.properties
+local.properties
+*.swp
+
+.video
+.attach_pid*
+apidoc
+
+
+bin/
+.settings
+.project
+.classpath
+.konan
+
+.DS_Store
+
+hs_err_pid*.log
