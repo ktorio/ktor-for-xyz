@@ -12,7 +12,7 @@ In this article, we will guide you through the steps to build an RESTful API wit
 
 To have a development environment for Ktor is quite simply, the only thing you need is [IntelliJ IDEA](https://www.jetbrains.com/idea/). Install JetBrains [Toolbox App](https://www.jetbrains.com/toolbox-app/) and install IntelliJ IDEA first. After IntelliJ IDEA installed, don’t forget to [install JDK](https://www.jetbrains.com/help/idea/sdk.html) (like PHP interpreter) and [Ktor plugin](https://plugins.jetbrains.com/plugin/16008-ktor) for later use.
 
-After the Ktor plugin installed properly, we can now create a new Ktor project using IntelliJ IDEA. Click the Ktor tab in the New Project dialog and fill out the project information. In next step, search and add “**Routing**”, “**ContentNegotiation**” and “**Jackson**” features then hit finish. IntelliJ IDEA will create a brand new Ktor project using [Gradle](https://www.jetbrains.com/help/idea/gradle.html) for you automatically. This process is equal when we use [Composer](https://getcomposer.org/) command to create a new project, add dependency in PHP but in a GUI way.
+After the Ktor plugin installed properly, we can now create a new Ktor project using IntelliJ IDEA. Click the Ktor tab in the New Project dialog and fill out the project information. In next step, search and add “`Routing`”, “`ContentNegotiation`” and “`Jackson`” features then hit finish. IntelliJ IDEA will create a brand new Ktor project using [Gradle](https://www.jetbrains.com/help/idea/gradle.html) for you automatically. This process is equal when we use [Composer](https://getcomposer.org/) command to create a new project, add dependency in PHP but in a GUI way.
 
 (gif)
 
@@ -38,3 +38,25 @@ call.respondText(
 ```
 
 We are going to build a RESTful API, right? How about JSON response?
+
+## Features
+
+Ktor structure itself by using interceptor pattern. Similar the concept of middleware, it means each HTTP request will pass through every interceptor and produce HTTP response. We called these interceptors as Features. Think the features is the abilities that application have. Therefore, when we need our application to handle JSON, we will need to “**install**” a feature called “`ContentNegotiation`”, and a JSON serialization library called “`Jackson`”. Ktor provide `install()` function to include a feature. Inside the function, we could customize the feature by passing closure.
+
+```
+install(ContentNegotiation) {
+    jackson {
+        enable(SerializationFeature.INDENT_OUTPUT)
+    }
+}
+```
+
+When we respond a JSON in Laravel, we use arrays to structure our data. In Ktor, we use a similar structure called `Map`. `Map` is a key-value pair and we have `mapOf()` function in Kotlin to help us declare such structure. When we pass a map to Ktor, it will automatically serialize it for us. We could see the sample code in the second routing.
+
+```
+get("/json/jackson") {
+    call.respond(mapOf("hello" to "world"))
+}
+```
+
+Open browser at `http://localhost:8080/json/jackson`, you will see the JSON string `{ "hello": "world" }`.
