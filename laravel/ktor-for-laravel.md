@@ -14,11 +14,11 @@ To have a development environment for Ktor is quite simply, the only thing you n
 
 After the Ktor plugin installed properly, we can now create a new Ktor project using IntelliJ IDEA. Click the Ktor tab in the New Project dialog and fill out the project information. In next step, search and add “`Routing`”, “`ContentNegotiation`” and “`Jackson`” features then hit finish. IntelliJ IDEA will create a brand new Ktor project using [Gradle](https://www.jetbrains.com/help/idea/gradle.html) for you automatically. This process is equal when we use [Composer](https://getcomposer.org/) command to create a new project, add dependency in PHP but in a GUI way.
 
-(gif)
+(TODO: gif - crate a new project)
 
 Take a look of the Project tool window in the left hand side. It contains a folder called `src`, that’s the place we write Kotlin code. Open up the `Application.kt` file, as you can see, there is a `main` function inside which is the entry point of Ktor application. Hit the green play button in the gutter, IntelliJ IDEA will trigger Gradle task to compile and run the application. After the application start up. Open browser at `http://localhost:8080/`, you will see `HELLO WORLD!`. This process is similar we type `artisan serve` in the terminal to run application in Laravel.
 
-(gif)
+(TODO: gif - run application)
 
 ## Routing
 
@@ -26,7 +26,7 @@ You must be familiar with the notion of routing in Laravel. Route is like the lo
 
 We got a hello world sample when creating project. Inside the `routing { }`, we have a `get()` function that accept `"/"` root URL string. The beautiful thing of DSL is, it made route definition in a structured and easy understanding way. As you can expect, we could use `post()`, `put()`, `patch()`, `delete()` methods to accept certain HTTP method. Compare to Laravel, the syntax is equal to `Route::get()`, `Route::post()`, etc.
 
-## The application call
+### The application call
 
 When we deal with HTTP, it typically contains two parts: request and response. In Ktor, it put those in an application call object. Inside our routing DSL, you will receive a `call` object inside the function. We could access the request details by `call.request` and setup our response by `call.respond` related methods. We can see how Ktor response a plain text response in the sample code, just pass a string and setup content type by using builtin classes.
 
@@ -39,7 +39,7 @@ call.respondText(
 
 We are going to build a RESTful API, right? How about JSON response?
 
-## Features
+### Features
 
 Ktor structure itself by using interceptor pattern. Similar the concept of middleware, it means each HTTP request will pass through every interceptor and produce HTTP response. We called these interceptors as Features. Think the features is the abilities that application have. Therefore, when we need our application to handle JSON, we will need to “**install**” a feature called “`ContentNegotiation`”, and a JSON serialization library called “`Jackson`”. Ktor provide `install()` function to include a feature. Inside the function, we could customize the feature by passing closure.
 
@@ -60,3 +60,43 @@ get("/json/jackson") {
 ```
 
 Open browser at `http://localhost:8080/json/jackson`, you will see the JSON string `{ "hello": "world" }`.
+
+## Integrate with database using Exposed ORM
+
+We are going to build a TODO RESTful API. In order to store all the `Task` information, we need an ORM like Eloquent. Ktor designed to be a slim, light-weight framework, there is no ORM builtin. Fortunately, there is an ORM framework called Exposed that develop by JetBrains!
+
+### Add dependencies
+
+Before using Exposed, we need to decide which database we are going to use. In this article, we will use [H2](https://www.h2database.com/html/main.html) in-memory database to provide a similar experience with SQLite. Just like we manage our dependencies using `composer.json`. In Ktor, we defined our dependencies using Gradle's  
+`build.gradle.kts` file. Open it and add `exposed-core`, `exposed-dao`, `exposed-jdbc` for Exposed also `h2` for H2 driver. Our `dependencies` sections will look like this:
+
+```
+dependencies {
+    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+    implementation("com.h2database:h2:$h2_version")
+}
+```
+
+### Schema and Entity
+
+In order to interact with database, we need an object to reflect the db schema. Let's declare a schema object like this:
+
+```
+object Tasks : IntIdTable() {
+    val title = varchar("title", 255)
+    val completed = bool("completed").default(false)
+}
+```
+
+When using Exposed in DAO flavor, each database table has a corresponding "Entity". Exposed entities allow you to insert, update, and delete records from the table as well. Just like we use "Model" in Eloquent, it simplifies the operation to interact with database. Let's declare an entity class like this:
+
+```
+class Task(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Task>(Tasks)
+
+    var title by Tasks.title
+    var completed by Tasks.completed
+}
+```
