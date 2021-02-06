@@ -100,3 +100,14 @@ class Task(id: EntityID<Int>) : IntEntity(id) {
     var completed by Tasks.completed
 }
 ```
+
+### Connect to database
+
+Everytime we run our application, we need to connect to database for later use. Use the `Database` class to connect H2 database by providing `url` and passing the `driver` to it.
+
+```
+Database.connect(
+    url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+    driver = "org.h2.Driver"
+)
+```
