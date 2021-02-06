@@ -111,3 +111,119 @@ Database.connect(
     driver = "org.h2.Driver"
 )
 ```
+## CRUD operations
+
+In order to exchange data between our client and server, we generally define a [DTO](https://en.wikipedia.org/wiki/Data_transfer_object) to represent the data format using data class. Just like we use POPO (Plain Old PHP Object) in PHP, data class is a simple class that carry data in Kotlin. In our sample, the `TaskDto` only need a nullable `id`, the `title` of a task, a boolean `completed` filed to store status. Here is how it looks like:   
+
+```
+data class TaskDto(val id: Int?, val title: String, val completed: Boolean = false)
+```
+
+### Retrieve a Task list
+
+We can touch the H2 database now. Create a new HTTP GET route. Inside this route, use `Task` entity to retrieve `all()` data from the table. We could sort the data by using `orderBy()` then `map()` the result in to our `TaskDTO` and return a `List<TaskDto>` as record set. When using Exposed, don't forget all the operation need to be place inside a `transcation()`.
+
+```
+get("/api/tasks") {
+    val tasks = transaction {
+        Task.all()
+            .orderBy(Tasks.id to SortOrder.DESC)
+            .map {
+                TaskDto(it.id.value, it.title, it.completed)
+            }
+    }
+
+    call.respond(mapOf("data" to tasks))
+}
+```
+
+After we received the task list, put the record set into a Map with a `data` key. The application call will serialize it using jackson serialization library.
+
+### Create a new Task
+
+Before we create a new task, we need to `receive()` a `TaskDto` object from client side. We instlled `ContentNegotiation` feature in our application, so it will deserialize a JSON string into a `TaskDto` automatically for us. To insert a data, simply use `new()` method on `Task` entity by passing column data in the closure. 
+
+```
+post("/api/tasks") {
+    val taskDto = call.receive<TaskDto>()
+    transaction {
+        Task.new {
+            title = taskDto.title
+        }
+    }
+    call.respond(HttpStatusCode.Created)
+}
+```
+
+We return HTTP 201 when task created. As you can wee, we could return any kind of `HttpStatusCode` provide by Ktor in a more semantic way.
+
+### Get an existing Task
+
+If you want to retrieve a single task, we could put the unique id on path. Put your path parameter inside curly braces with name. Then retrieve it using array access on `call.parameters`. Convert it to integer, search id in database using `findById()`. Make sure you map the record to DTO before return to client side.
+
+```
+get("/api/tasks/{id}") {
+    val id = call.parameters["id"]?.toIntOrNull()
+
+    if (id == null) {
+        call.respond(HttpStatusCode.BadRequest)
+    }
+
+    val task = transaction {
+        Task.findById(id!!)?.let {
+            TaskDto(it.id.value, it.title, it.completed)
+        }
+    }
+
+    if (task == null) {
+        call.respond(HttpStatusCode.NotFound)
+    }
+
+    call.respond(task!!)
+}
+```
+
+### Update existing Tasks
+
+To update an existing task is similar to create a task. Receive `TaskDto` and find the corresponding entry by its id. Update the data using setter directly on entity. Exposed will update the changes at the end of the transaction.
+
+```
+patch("/api/tasks") {
+    val dto = call.receive<TaskDto>()
+
+    if (dto.id == null) {
+        call.respond(HttpStatusCode.BadRequest)
+    }
+
+    transaction {
+        val task = Task.findById(dto.id!!)
+        task?.title = dto.title
+        task?.completed = dto.completed
+    }
+
+    call.respond(HttpStatusCode.NoContent)
+}
+```
+
+You can leverage the safe call syntax `?` to avoid null pointer exception in Kotlin. 
+
+### Delete a Task
+
+To delete a task is straight forward. Just call `delete()` method on the entity. Other part is pretty much the same. 
+
+```
+delete("/api/tasks") {
+    val dto = call.receive<TaskDto>()
+
+    if (dto.id == null) {
+        call.respond(HttpStatusCode.BadRequest)
+    }
+
+    transaction {
+        val task = Task.findById(dto.id!!)
+        task?.delete()
+    }
+
+    call.respond(HttpStatusCode.NoContent)
+}
+```
