@@ -6,7 +6,7 @@ Welcome, artisan. When you first jump into a technical stack that you are not fa
 
 [Ktor](https://ktor.io/) (pronounced Kay-tor) is a framework built from the ground up using Kotlin and coroutines. It aim to leverage to the maximum extent some of the language features that Kotlin offers, such as DSLs and coroutines. Compare with other ecosystems, it’s a framework like Slim in PHP, Express.js in JavaScript, Sinatra in Ruby. Ktor is developed by JetBrains and used internally. It’s an open source project using Apache 2.0 license.
 
-In this article, we will guide you through the steps to build an RESTful API with H2 database using Ktor. We will use terminologies in [Laravel](https://laravel.com/) to make you get started quickly.
+In this article, we will guide you through the steps to build an RESTful API with SQLite database using Ktor. We will use terminologies in [Laravel](https://laravel.com/) to make you get started quickly.
 
 ## Create a Ktor project
 
@@ -63,19 +63,26 @@ Open browser at `http://localhost:8080/json/jackson`, you will see the JSON stri
 
 ## Integrate with database using Exposed ORM
 
-We are going to build a TODO RESTful API. In order to store all the `Task` information, we need an ORM like Eloquent. Ktor designed to be a slim, light-weight framework, there is no ORM builtin. Fortunately, there is an ORM framework called Exposed that develop by JetBrains!
+We are going to build a TODO RESTful API. In order to store all the `Task` information, we need an ORM like Eloquent. Ktor designed to be a slim, light-weight framework, so there is no ORM builtin. Fortunately, there is an ORM framework called Exposed that develop by JetBrains!
 
 ### Add dependencies
 
-Before using Exposed, we need to decide which database we are going to use. In this article, we will use [H2](https://www.h2database.com/html/main.html) in-memory database to provide a similar experience with SQLite. Just like we manage our dependencies using `composer.json`. In Ktor, we defined our dependencies using Gradle's  
-`build.gradle.kts` file. Open it and add `exposed-core`, `exposed-dao`, `exposed-jdbc` for Exposed also `h2` for H2 driver. Our `dependencies` sections will look like this:
+Before using Exposed, we need to decide which database we are going to use. In this article, we will use SQLite database to store data in a file. Just like we manage our dependencies using `composer.json`. In Ktor, we defined our dependencies using Gradle's  
+`build.gradle.kts` file. Open it and add `exposed-core`, `exposed-dao`, `exposed-jdbc` for Exposed, also `sqlite-jdbc` for SQLite driver. Our `dependencies` sections will look like this:
 
 ```
+val exposed_version: String by project
+val sqlite_version: String by project
+
+// ...
+
 dependencies {
+    // ...
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
-    implementation("com.h2database:h2:$h2_version")
+    implementation("org.xerial:sqlite-jdbc:$sqlite_version")
+    // ...
 }
 ```
 
@@ -84,7 +91,7 @@ dependencies {
 In order to interact with database, we need an object to reflect the db schema. Let's declare a schema object like this:
 
 ```
-object Tasks : IntIdTable() {
+object Tasks : IntIdTable("tasks") {
     val title = varchar("title", 255)
     val completed = bool("completed").default(false)
 }
@@ -101,16 +108,38 @@ class Task(id: EntityID<Int>) : IntEntity(id) {
 }
 ```
 
+### Create SQLite database file
+
+We will store our `Task` data in a SQLite database. Open Terminal tool window in IntelliJ IDEA and type this command to create a new SQLite database file in database folder.
+
+```
+$ mkdir database
+$ touch database/database.sqlite
+```
+
 ### Connect to database
 
-Everytime we run our application, we need to connect to database for later use. Use the `Database` class to connect H2 database by providing `url` and passing the `driver` to it.
+Before we retrieve data from SQLite, we need to connect to it first. Use the `Database` class to connect database by providing `url` and passing the `driver` to it.
 
 ```
 Database.connect(
-    url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
-    driver = "org.h2.Driver"
+    url = "jdbc:sqlite:./database/database.sqlite",
+    driver = "org.sqlite.JDBC"
 )
+
+TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
 ```
+
+### Create tasks table
+
+To make sure our `tasks` table exist before we select data from it, use `SchemaUtil` to create the table when application run. Put these code right after `Database.connect()`.
+
+```
+transaction {
+    SchemaUtils.create(Tasks)
+}
+```
+
 ## CRUD operations
 
 In order to exchange data between our client and server, we generally define a [DTO](https://en.wikipedia.org/wiki/Data_transfer_object) to represent the data format using data class. Just like we use POPO (Plain Old PHP Object) in PHP, data class is a simple class that carry data in Kotlin. In our sample, the `TaskDto` only need a nullable `id`, the `title` of a task, a boolean `completed` filed to store status. Here is how it looks like:   
@@ -121,7 +150,7 @@ data class TaskDto(val id: Int?, val title: String, val completed: Boolean = fal
 
 ### Retrieve a Task list
 
-We can touch the H2 database now. Create a new HTTP GET route. Inside this route, use `Task` entity to retrieve `all()` data from the table. We could sort the data by using `orderBy()` then `map()` the result in to our `TaskDTO` and return a `List<TaskDto>` as record set. When using Exposed, don't forget all the operation need to be place inside a `transcation()`.
+We can touch the database now. Create a new HTTP GET route. Inside this route, use `Task` entity to retrieve `all()` data from the table. We could sort the data by using `orderBy()` then `map()` the result in to our `TaskDTO` and return a `List<TaskDto>` as record set. When using Exposed, don't forget all the operation need to be place inside a `transcation()`.
 
 ```
 get("/api/tasks") {
@@ -230,6 +259,6 @@ delete("/api/tasks") {
 
 ## Retrospective
 
-In the article, we've walked through an API development process using Ktor framework from the perspective of a developer familiar with Laravel. First we create a new Ktor project using Ktor plugin in IntelliJ IDEA. After that, we use `routing` DSL syntax to define the application route, add `ContentNegotiation` feature to grant the ability to handle JSON serialization/deserialization. Then we add Exposed and H2 driver as dependencies to connect database and execute CRUD operations. Just simple 4 steps, we can build a RESTful in ease.
+In the article, we've walked through an API development process using Ktor framework from the perspective of a developer familiar with Laravel. First we create a new Ktor project using Ktor plugin in IntelliJ IDEA. After that, we use `routing` DSL syntax to define the application route, add `ContentNegotiation` feature to grant the ability to handle JSON serialization/deserialization. Then we add Exposed and SQLite driver as dependencies to connect database and execute CRUD operations. Just simple 4 steps, we can build a RESTful in ease.
 
 As mentioned, there are many similarities between two development ecosystems. We use Gradle to manage dependencies and build project just like we did with Composer. We use `routing` DSL instead `Route` to define application route. We use a `Map` of `TaskDto` to represent data structure just like we use `array` in Laravel. `Exposed` is pretty much the same with `Eloquent`. We can quickly get the notion by using metaphor above. All the source code could be found [in this repository](https://github.com/shengyou/ktor-for-laravel-sample). I truly hope this article could help you get started quickly and enjoy your journey of Ktor development.
