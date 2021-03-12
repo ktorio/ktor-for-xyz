@@ -33,11 +33,11 @@ Optionally, we highly recommend developers install the [JetBrains Toolbox App](h
 
 We can now create a new Ktor project using IntelliJ IDEA. First, click the Ktor tab in the New Project dialog and fill out the project information. In the next step, search and add “`Routing`”, “`ContentNegotiation`” and “`kotlinx.serialization`” features, then hit finish. IntelliJ IDEA will create a brand new Ktor project using [Gradle](https://www.jetbrains.com/help/idea/gradle.html) for you automatically. Laravel developers will find this experience similar to their use of [Composer](https://getcomposer.org/) and the commands to create a new project or add a dependency, but with Ktor, there's a graphical user interface.
 
-(TODO: gif - crate a new project)
+![Create a new Ktor project](images/1-create_project.gif)
 
 On the left-hand side, we'll see the Project tool window. It contains a folder called `src`, which we will write and maintain Kotlin code. Look for and open the `Application.kt` file. You should find a `main` function which is the entry point of the Ktor application. To run the web application, press the green play button in the editor's gutter. IntelliJ IDEA will start a Gradle task to compile and run the application. Once the application is running, open the browser and navigate to `http://localhost:8080/`, at which point you will see a response of `HELLO WORLD!`. This process is similar to typing `artisan serve` in the terminal to run a Laravel application.
 
-(TODO: gif - run application)
+![Run application](images/2-run_application.gif)
 
 ## Routing
 
