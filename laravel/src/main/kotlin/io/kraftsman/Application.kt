@@ -39,6 +39,10 @@ fun Application.module(testing: Boolean = false) {
 
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
 
+    transaction {
+        SchemaUtils.create(Tasks)
+    }
+
     routing {
         get("/") {
             call.respondText("Hello World!")
