@@ -11,6 +11,11 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.Connection
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
@@ -26,6 +31,13 @@ fun Application.module(testing: Boolean = false) {
     install(ContentNegotiation) {
         json()
     }
+
+    Database.connect(
+        url = "jdbc:sqlite:./laravel/database/database.sqlite",
+        driver = "org.sqlite.JDBC"
+    )
+
+    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
 
     routing {
         get("/") {
