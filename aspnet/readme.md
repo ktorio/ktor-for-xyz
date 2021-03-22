@@ -1,26 +1,28 @@
 # Ktor Quick Start For An ASP.NET Developer
 
-Folks familiar with the .NET ecosystem might take for granted the monolithic libraries Microsoft has built. The .NET ecosystem is designed to make developers _immediately_ productive but comes at the expense of limited options and potential for group-think. The Kotlin community, and as it relates to Ktor, is built with a different founding philosophy of community and choices. As a .NET developer, the vast options available are almost daunting.
+Folks familiar with the .NET ecosystem might take for granted the foundational libraries Microsoft has built for developers. The .NET technology stack is designed to make developers _immediately_ productive but comes at the cost of limited options and a potential for group-think. The Kotlin community, and as it relates to Ktor, is built with a different founding philosophy of community and choices. As a .NET developer coming to the Kotlin community, the vast array of options available can be daunting.
 
-We'll build a straightforward HTTP API similar to one we might create with ASP.NET Core and identify some similarities in this quick guide. These similarities will help us compare and contrast features.
+In this post, we'll build a straightforward HTTP API similar to one we might create with ASP.NET Core and identify the similarities between Ktor and ASP.NET, allowing us to compare and contrast features.
 
-This guide is a high-level overview and will touch on dependency management, build systems, and Kotlin syntax. It will not be a comprehensive guide on those subjects.
+This guide is meant to be a high-level overview and we will touch on dependency management, build systems, and Kotlin syntax. It will not be a comprehensive guide on all those subjects.
 
-Before getting started, be sure you have the latest IntelliJ IDEA installed along with the Ktor plugin. We used Ktor 1.5.0 when authoring this article.
+Before getting started, we need to be sure we have the latest IntelliJ IDEA installed along with the Ktor plugin. We used Ktor 1.5.2 when authoring this article.
 
 ## Creating a new project
 
 Like ASP.NET development, users will have the option of working with templates to get started with Ktor. Unlike ASP.NET development, rather than having a feature-complete template, Ktor developers get to opt-in to many features from the **New Project** dialog from within IntelliJ IDEA. The ability to *install* components gives us the ability to tackle a wide array of technical problems while adhering to YAGNI's philosophy (you ain't gonna need it).
 
-In this article, we'll start by creating a new Ktor project, and the first thing ASP.NET developers will notice are the choices. We can choose the JAVA version, the project system, the host server, and Server/Client features.
+In this article, we'll start by creating a new Ktor project, and the first thing ASP.NET developers will notice are the choices. We can set the project name, location, the build system, the JAVA version, and the host server. In this case, let's call the Name of our project `Tasks`.
 
-![new ktor project dialog](./images/new-project-dialog.png)
+![new ktor project dialog](./images/new-projects-dialog.png)
 
-For our HTTP API, we'll want to install the **GSON** and **Content Negotiation** features by checking them in the **New Project** dialog. We can leave all other settings on the default.
+For our HTTP API, we'll want to install the **GSON** and **Content Negotiation** features by adding them in the **New Project** dialog. We can ignore all other features for now.
 
-During this dialog, folks unsure of what each feature accomplishes can highlight the item to see the documentation describing the element directly.
+![ktor features selection dialog](./images/features-dialog.png)
 
-Clicking next, we will get to the `Project Name` input box. Put any name you would like here. In this case, let's call it `Tasks`. We're ready to start looking at some code.
+During this dialog, folks unsure of what each feature accomplishes can highlight the item to see the documentation on the right describing the element directly.
+
+Clicking finish, will bring us to the IntelliJ editor where we are ready to start writing code.
 
 ## Ktor Hello World
 
