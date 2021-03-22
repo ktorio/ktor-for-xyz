@@ -107,7 +107,7 @@ dependencies {
 }
 ```
 
-Here comes a tip to store package version number separately. We declared `*_version` variables in `build.gradle.kts`, then use the same variable name and version number pair in `gradle.properties`. Here is how it looks like:
+When working with packages, we need to declare `*_version` variables in `build.gradle.kts`, then use the same variable name and version number pair in `gradle.properties`. Here is how that looks like:
 
 ```
 exposed_version=0.25.1
