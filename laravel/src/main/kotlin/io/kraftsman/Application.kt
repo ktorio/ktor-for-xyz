@@ -7,12 +7,14 @@ import io.ktor.serialization.*
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.request.*
+import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
@@ -48,9 +50,85 @@ fun Application.module(testing: Boolean = false) {
             call.respondText("Hello World!")
         }
     }
+
     routing {
         get("/json/kotlinx-serialization") {
             call.respond(mapOf("hello" to "world"))
+        }
+    }
+
+    routing {
+        get("/api/tasks") {
+            val tasks = transaction {
+                Task.all()
+                    .orderBy(Tasks.id to SortOrder.DESC)
+                    .map {
+                        TaskDto(it.id.value, it.title, it.completed)
+                    }
+            }
+
+            call.respond(mapOf("data" to tasks))
+        }
+
+        post("/api/tasks") {
+            val taskDto = call.receive<TaskDto>()
+            transaction {
+                Task.new {
+                    title = taskDto.title
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+
+        get("/api/tasks/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest)
+            }
+
+            val task = transaction {
+                Task.findById(id!!)?.let {
+                    TaskDto(it.id.value, it.title, it.completed)
+                }
+            }
+
+            if (task == null) {
+                call.respond(HttpStatusCode.NotFound)
+            }
+
+            call.respond(task!!)
+        }
+
+        patch("/api/tasks") {
+            val dto = call.receive<TaskDto>()
+
+            if (dto.id == null) {
+                call.respond(HttpStatusCode.BadRequest)
+            }
+
+            transaction {
+                val task = Task.findById(dto.id!!)
+                task?.title = dto.title
+                task?.completed = dto.completed
+            }
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+
+        delete("/api/tasks") {
+            val dto = call.receive<TaskDto>()
+
+            if (dto.id == null) {
+                call.respond(HttpStatusCode.BadRequest)
+            }
+
+            transaction {
+                val task = Task.findById(dto.id!!)
+                task?.delete()
+            }
+
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }
@@ -66,3 +144,6 @@ class Task(id: EntityID<Int>) : IntEntity(id) {
     var title by Tasks.title
     var completed by Tasks.completed
 }
+
+@Serializable
+data class TaskDto(val id: Int?, val title: String, val completed: Boolean = false)
