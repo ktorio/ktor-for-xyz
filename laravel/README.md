@@ -107,6 +107,13 @@ dependencies {
 }
 ```
 
+Here comes a tip to store package version number separately. We declared `*_version` variables in `build.gradle.kts`, then use the same variable name and version number pair in `gradle.properties`. Here is how it looks like:
+
+```
+exposed_version=0.25.1
+sqlite_version=3.34.0
+```
+
 ### Schema and Entity
 
 To interact with our SQLite database, we need a Kotlin object defining the database schema. We will use the following code to perform simplified database migration and ensure we have a SQL table for our tasks.
