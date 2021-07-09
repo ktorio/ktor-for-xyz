@@ -27,6 +27,4 @@ val Task.asDto get() = TaskDto(this.id, this.name, this.completed)
 data class TaskEditDto(
     val name: String,
     val completed: Boolean
-) {
-    fun isValid() = !name.isNullOrEmpty()
-}
+)

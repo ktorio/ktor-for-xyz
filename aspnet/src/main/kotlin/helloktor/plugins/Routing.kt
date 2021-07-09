@@ -4,16 +4,14 @@ import helloktor.database.Task
 import helloktor.database.tasks
 import helloktor.models.TaskEditDto
 import helloktor.models.asDto
+import helloktor.plugins.validation.validate
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import org.ktorm.dsl.eq
-import org.ktorm.entity.add
-import org.ktorm.entity.find
-import org.ktorm.entity.removeIf
-import org.ktorm.entity.sortedBy
+import org.ktorm.entity.*
 
 fun Application.configureRouting() {
 
@@ -22,7 +20,7 @@ fun Application.configureRouting() {
             val db = SqliteDatabase.connect()
             val results = db
                 .tasks
-                .sortedBy { t -> t.completed }
+                .sortedByDescending { it.completed }
 
             call.respond(results.asDto)
         }
@@ -30,7 +28,9 @@ fun Application.configureRouting() {
         post("/") {
             val request = call.receive<TaskEditDto>()
 
-            if (request.isValid()) {
+            val validated = request.validate()
+
+            if (validated.isValid) {
                 val db = SqliteDatabase.connect()
                 val task = Task {
                     name = request.name
@@ -41,7 +41,7 @@ fun Application.configureRouting() {
                 call.respond(HttpStatusCode.Created, task.asDto)
 
             } else {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(HttpStatusCode.BadRequest, validated)
             }
         }
 
@@ -50,7 +50,9 @@ fun Application.configureRouting() {
             val request = call.receive<TaskEditDto>()
             val db = SqliteDatabase.connect()
 
-            if (request.isValid()) {
+            val validated = request.validate()
+
+            if (validated.isValid) {
                 param?.let {
                     val id = it.toInt()
                     val task = db.tasks.find { t -> t.id eq id }
@@ -66,7 +68,7 @@ fun Application.configureRouting() {
                     }
                 }
             } else {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(HttpStatusCode.BadRequest, validated)
             }
         }
 

@@ -29,4 +29,6 @@ dependencies {
     implementation("org.ktorm:ktorm-core:$ktorm_version")
     implementation("org.ktorm:ktorm-support-sqlite:$ktorm_version")
     implementation("org.xerial:sqlite-jdbc:3.34.0")
+    // Add Validation
+    implementation("org.valiktor:valiktor-core:0.12.0")
 }
