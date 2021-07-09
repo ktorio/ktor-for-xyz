@@ -1,0 +1,23 @@
+###
+GET http://localhost:8080/
+
+###
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "name": "clean up code",
+  "completed": false
+}
+
+###
+PUT http://localhost:8080/1
+Content-Type: application/json
+
+{
+  "name": "clean up code (yay!)",
+  "completed": true
+}
+
+### Change the Id
+DELETE http://localhost:8080/1
